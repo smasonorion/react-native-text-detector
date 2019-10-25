@@ -27,9 +27,11 @@ RCT_REMAP_METHOD(detectFromUri, detectFromUri:(NSString *)imagePath resolver:(RC
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
         VNDetectTextRectanglesRequest *textReq = [VNDetectTextRectanglesRequest new];
         NSDictionary *d = [[NSDictionary alloc] init];
-        NSData *imageData = [NSData dataWithContentsOfURL:[NSURL URLWithString:imagePath]];
+//        NSLog(@"Image path in native code: %@", imagePath);
+        NSData * imageData = [[NSData alloc] initWithContentsOfURL: [NSURL URLWithString: imagePath]];
+//        NSData *imageData = [NSData dataWithContentsOfFile:imagePath];
         UIImage *image = [UIImage imageWithData:imageData];
-        
+
         if (!image) {
             dispatch_async(dispatch_get_main_queue(), ^{
                 resolve(@NO);
@@ -38,7 +40,7 @@ RCT_REMAP_METHOD(detectFromUri, detectFromUri:(NSString *)imagePath resolver:(RC
         }
         
         VNImageRequestHandler *handler = [[VNImageRequestHandler alloc] initWithData:imageData options:d];
-        
+
         NSError *error;
         [handler performRequests:@[textReq] error:&error];
         if (error || !textReq.results || textReq.results.count == 0) {
@@ -62,8 +64,11 @@ RCT_REMAP_METHOD(detectFromUri, detectFromUri:(NSString *)imagePath resolver:(RC
         CGPoint origin;
         NSMutableArray *output = [NSMutableArray array];
         
+        int cnt = 0;
+        NSArray *filter = @[@"MRN", @"VIS", @"NAM", @"DOB", @"AGE", @"SEX"];
+        int filterSize = [filter count];
         for(VNTextObservation *observation in textReq.results){
-            if(observation){
+            if(observation && cnt < filterSize ){
                 NSMutableDictionary *block = [NSMutableDictionary dictionary];
                 NSMutableDictionary *bounding = [NSMutableDictionary dictionary];
                 
@@ -80,8 +85,29 @@ RCT_REMAP_METHOD(detectFromUri, detectFromUri:(NSString *)imagePath resolver:(RC
                 bounding[@"height"] = @(size.height);
                 block[@"text"] = [tesseract.recognizedText stringByReplacingOccurrencesOfString:@"\n" withString:@""];
                 block[@"bounding"] = bounding;
-                [output addObject:block];
+
+                NSString *first3Letters = [block[@"text"] substringToIndex:3];
+                block[@"category"] = first3Letters;
+
+                BOOL captureItem = TRUE;
+//                switch([filter indexOfObject:first3Letters]) {
+//                    case 1:  // VISIT
+//                        captureItem = FALSE;
+//                        break;
+//                    case 0:  // MRN
+//                    case 2:  // Name ... not used but possibility to have actual name trigger this
+//                    case 3:  // DOB
+//                    case 4:  // AGE
+//                    case 5:  // SEX - may be combined with AGE
+//                        break;
+//                    default:
+//                        if(cnt > 3) captureItem = FALSE;
+//                        else block[@"category"] = @"NAM";
+//
+//                }
+                if(captureItem) [output addObject:block];
             }
+            cnt++;
         }
         dispatch_async(dispatch_get_main_queue(), ^{
             resolve(output);
