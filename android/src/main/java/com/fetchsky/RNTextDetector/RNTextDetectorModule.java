@@ -3,6 +3,7 @@ package com.fetchsky.RNTextDetector;
 
 import android.graphics.Rect;
 import android.support.annotation.NonNull;
+//import android.util.Log;
 
 import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.Promise;
@@ -25,7 +26,8 @@ public class RNTextDetectorModule extends ReactContextBaseJavaModule {
 
   private final ReactApplicationContext reactContext;
   private FirebaseVisionTextRecognizer detector;
-  private FirebaseVisionImage image;
+    private FirebaseVisionImage image;
+    private Object FBVInstance;
 
   public RNTextDetectorModule(ReactApplicationContext reactContext) {
     super(reactContext);
@@ -40,28 +42,29 @@ public class RNTextDetectorModule extends ReactContextBaseJavaModule {
 
   @ReactMethod
     public void detectFromUri(String uri, final Promise promise) {
-        try {
-            image = FirebaseVisionImage.fromFilePath(this.reactContext, android.net.Uri.parse(uri));
-            Task<FirebaseVisionText> result =
-                    detector.processImage(image)
-                            .addOnSuccessListener(new OnSuccessListener<FirebaseVisionText>() {
-                                @Override
-                                public void onSuccess(FirebaseVisionText firebaseVisionText) {
-                                    promise.resolve(getDataAsArray(firebaseVisionText));
-                                }
-                            })
-                            .addOnFailureListener(
-                                    new OnFailureListener() {
-                                        @Override
-                                        public void onFailure(@NonNull Exception e) {
-                                            e.printStackTrace();
-                                            promise.reject(e);
-                                        }
-                                    });;
-        } catch (IOException e) {
-            promise.reject(e);
-            e.printStackTrace();
-        }
+         try {
+//             Log.d("RNTD_TAG", "image uri: ".concat(uri));
+             image = FirebaseVisionImage.fromFilePath(this.reactContext, android.net.Uri.parse(uri));
+             Task<FirebaseVisionText> result =
+                 detector.processImage(image)
+                     .addOnSuccessListener(new OnSuccessListener<FirebaseVisionText>() {
+                         @Override
+                         public void onSuccess(FirebaseVisionText firebaseVisionText) {
+                             promise.resolve(getDataAsArray(firebaseVisionText));
+                         }
+                     })
+                     .addOnFailureListener(new OnFailureListener() {
+                         @Override
+                         public void onFailure(@NonNull Exception e) {
+                             e.printStackTrace();
+                             promise.reject(e);
+                         }
+                     });;
+         }
+         catch (IOException e) {
+             promise.reject(e);
+             e.printStackTrace();
+         }
     }
 
     /**
