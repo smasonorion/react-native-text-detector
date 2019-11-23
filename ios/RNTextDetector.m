@@ -14,10 +14,13 @@
 {
     return dispatch_get_main_queue();
 }
-RCT_EXPORT_MODULE()
+
+// name the module the same as the ObjC implementation module name, ie RNTextDetector - see https://facebook.github.io/react-native/docs/native-modules-ios
+RCT_EXPORT_MODULE()  
 
 static NSString *const detectionNoResultsMessage = @"Something went wrong";
 
+// expose method detectFromUri to RN
 RCT_REMAP_METHOD(detectFromUri, detectFromUri:(NSString *)imagePath resolver:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject) {
     if (!imagePath) {
         resolve(@NO);
@@ -27,10 +30,20 @@ RCT_REMAP_METHOD(detectFromUri, detectFromUri:(NSString *)imagePath resolver:(RC
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
         VNDetectTextRectanglesRequest *textReq = [VNDetectTextRectanglesRequest new];
         NSDictionary *d = [[NSDictionary alloc] init];
-//        NSLog(@"Image path in native code: %@", imagePath);
+
+        NSLog(@"\n\nImage path in native code: %@ --\n", imagePath);
         NSData * imageData = [[NSData alloc] initWithContentsOfURL: [NSURL URLWithString: imagePath]];
-//        NSData *imageData = [NSData dataWithContentsOfFile:imagePath];
+    //    NSData *imageData = [NSData dataWithContentsOfFile:imagePath];
+        NSLog(@"\n\nloaded image data\n");
+        if (!imageData) {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                resolve(@NO);
+            });
+            return;
+        }
+
         UIImage *image = [UIImage imageWithData:imageData];
+        NSLog(@"\n\ncreated image\n");
 
         if (!image) {
             dispatch_async(dispatch_get_main_queue(), ^{
