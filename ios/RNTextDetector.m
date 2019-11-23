@@ -34,7 +34,7 @@ RCT_REMAP_METHOD(detectFromUri, detectFromUri:(NSString *)imagePath resolver:(RC
         NSLog(@"\n\nImage path in native code: %@ --\n", imagePath);
         NSData * imageData = [[NSData alloc] initWithContentsOfURL: [NSURL URLWithString: imagePath]];
     //    NSData *imageData = [NSData dataWithContentsOfFile:imagePath];
-        NSLog(@"\n\nloaded image data\n");
+        // NSLog(@"\n\nloaded image data\n");
         if (!imageData) {
             dispatch_async(dispatch_get_main_queue(), ^{
                 resolve(@NO);
@@ -43,7 +43,7 @@ RCT_REMAP_METHOD(detectFromUri, detectFromUri:(NSString *)imagePath resolver:(RC
         }
 
         UIImage *image = [UIImage imageWithData:imageData];
-        NSLog(@"\n\ncreated image\n");
+        // NSLog(@"\n\ncreated image\n");
 
         if (!image) {
             dispatch_async(dispatch_get_main_queue(), ^{
@@ -79,7 +79,7 @@ RCT_REMAP_METHOD(detectFromUri, detectFromUri:(NSString *)imagePath resolver:(RC
         
         int cnt = 0;
         NSArray *filter = @[@"MRN", @"VIS", @"NAM", @"DOB", @"AGE", @"SEX"];
-        int filterSize = [filter count];
+        int filterSize = 20; //[filter count];
         for(VNTextObservation *observation in textReq.results){
             if(observation && cnt < filterSize ){
                 NSMutableDictionary *block = [NSMutableDictionary dictionary];
@@ -99,10 +99,10 @@ RCT_REMAP_METHOD(detectFromUri, detectFromUri:(NSString *)imagePath resolver:(RC
                 block[@"text"] = [tesseract.recognizedText stringByReplacingOccurrencesOfString:@"\n" withString:@""];
                 block[@"bounding"] = bounding;
 
-                NSString *first3Letters = [block[@"text"] substringToIndex:3];
-                block[@"category"] = first3Letters;
+                // NSString *first3Letters = [block[@"text"] substringToIndex:3];
+                // block[@"category"] = first3Letters;
 
-                BOOL captureItem = TRUE;
+                // BOOL captureItem = TRUE;
 //                switch([filter indexOfObject:first3Letters]) {
 //                    case 1:  // VISIT
 //                        captureItem = FALSE;
@@ -118,7 +118,8 @@ RCT_REMAP_METHOD(detectFromUri, detectFromUri:(NSString *)imagePath resolver:(RC
 //                        else block[@"category"] = @"NAM";
 //
 //                }
-                if(captureItem) [output addObject:block];
+                // if(captureItem) [output addObject:block];
+                [output addObject:block];
             }
             cnt++;
         }
